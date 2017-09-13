@@ -1,6 +1,11 @@
 function initialize(video, menu) {
-	let timeout = 100
-	let firstLoadTimeout = 1000
+	// timeout is not used to wait on content
+	// content is assured to be available b/c of mutation observer
+	// this timeout is used to override Udemy's events after click/button press
+	let timeout = 5
+	// after video sends playing event we know the video is ready
+	// this timeout is used to override Udemy's set rate after load
+	let firstLoadTimeout = 10
 	let highestRate = 3.5
 	let increment = 0.25
 
@@ -13,6 +18,7 @@ function initialize(video, menu) {
 			let videoChanged = classList.some((string, index) => {
 				if (event.target.classList.contains(string)) return true
 			})
+			// If the user selected a new video, run setup for new video
 			if (videoChanged) Observer.observe(document, { childList: true, subtree: true })
 		}
 
@@ -49,8 +55,8 @@ function initialize(video, menu) {
 		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">1.5x<span class="vjs-control-text"> </span></li>
 		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">1.25x<span class="vjs-control-text"> </span></li>
 		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">1x<span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">.75x<span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">.5x<span class="vjs-control-text"> </span></li>
+		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">0.75x<span class="vjs-control-text"> </span></li>
+		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">0.5x<span class="vjs-control-text"> </span></li>
 	`
 		Object.keys(menu.children).forEach((val, index) => {
 			let element = menu.children[val]
@@ -76,7 +82,7 @@ function initialize(video, menu) {
 		element.style.background = 'red'
 	}
 
-	getPlaybackRate(firstLoadTimeout)
+	video.addEventListener('playing', getPlaybackRate.bind(null, firstLoadTimeout))
 	document.addEventListener('keyup', getPlaybackRate.bind(null, timeout), true)
 	document.addEventListener('click', getPlaybackRate.bind(null, timeout))
 	populateItems()
