@@ -3,14 +3,14 @@ function initialize(video, menu) {
 	// content is assured to be available b/c of mutation observer
 	// and event listeners
 	// timeout is used to override Udemy's default actions
-	let timeout = 5
-	let highestRate = 3.5
-	let increment = 0.25
+	const TIMEOUT = 5
+	const MAX_RATE = 3.5
+	const INCREMENT = 0.25
 
 	function getPlaybackRate(timeout, event) {
 		if (event.type === 'click') {
 			let classList = ['fx', 'lecture__item__link__name', 'mr5', 'lecture__item__link', 'udi-play']
-			let videoChanged = classList.some((string, index) => {
+			let videoChanged = classList.some(string => {
 				if (event.target.classList.contains(string)) return true
 			})
 			// if the user selected a new video, run setup for new video
@@ -25,7 +25,7 @@ function initialize(video, menu) {
 					// on initial load make sure menu
 					// items are correctly set
 					// gotta love algebra
-					let itemIndexPosition = (obj.udemy_playback_rate - highestRate) / increment / -1
+					let itemIndexPosition = (obj.udemy_playback_rate - MAX_RATE) / INCREMENT / -1
 					setMenuItemsHTML(menu.children[itemIndexPosition])
 				}
 				video.playbackRate = obj.udemy_playback_rate
@@ -33,7 +33,7 @@ function initialize(video, menu) {
 		})
 	}
 
-	function setPlaybackRate(rate, timeout, event) {
+	function setPlaybackRate(rate, event) {
 		chrome.storage.sync.set({ udemy_playback_rate: rate }, () => {
 			video.playbackRate = rate
 		})
@@ -61,7 +61,7 @@ function initialize(video, menu) {
 			let element = menu.children[val]
 
 			element.addEventListener('click', function() {
-				setPlaybackRate(highestRate - index * increment, timeout)
+				setPlaybackRate(MAX_RATE - index * INCREMENT)
 				setMenuItemsHTML(element)
 			})
 		})
@@ -81,17 +81,17 @@ function initialize(video, menu) {
 		element.style.background = 'red'
 	}
 
-	video.addEventListener('loadeddata', getPlaybackRate.bind(null, timeout))
-	video.addEventListener('play', getPlaybackRate.bind(null, timeout))
-	video.addEventListener('pause', getPlaybackRate.bind(null, timeout))
+	video.addEventListener('loadeddata', getPlaybackRate.bind(null, TIMEOUT))
+	video.addEventListener('play', getPlaybackRate.bind(null, TIMEOUT))
+	video.addEventListener('pause', getPlaybackRate.bind(null, TIMEOUT))
 	// is used to check if new video being clicked on
-	document.addEventListener('click', getPlaybackRate.bind(null, timeout))
+	document.addEventListener('click', getPlaybackRate.bind(null, TIMEOUT))
 	populateItems()
 }
 
 let Observer = new MutationObserver((mutations, observer) => {
 	let hasRun = false
-	mutations.forEach((mutation, index) => {
+	mutations.forEach(() => {
 		let videoElement = document.getElementsByClassName('vjs-tech')[0]
 		let menuElement = document.querySelector(
 			'div.vjs-control-bar.hide-when-user-inactive.player-controls > div.playback-controls > div > div.vjs-menu > ul',
