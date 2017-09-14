@@ -1,31 +1,29 @@
 function initialize(video, menu) {
 	// timeout is not used to wait on content
 	// content is assured to be available b/c of mutation observer
-	// this timeout is used to override Udemy's events after click/button press
+	// and event listeners
+	// timeout is used to override Udemy's default actions
 	let timeout = 5
-	// after video sends playing event we know the video is ready
-	// this timeout is used to override Udemy's set rate after load
-	let firstLoadTimeout = 10
 	let highestRate = 3.5
 	let increment = 0.25
 
-	function getPlaybackRate(timeout, event = { type: 'no event' }) {
-		// 13 is enter 32 is space
-		if (event.type === 'keyup' && [13, 32].includes(event.keyCode) === false) return
-
+	function getPlaybackRate(timeout, event) {
 		if (event.type === 'click') {
 			let classList = ['fx', 'lecture__item__link__name', 'mr5', 'lecture__item__link', 'udi-play']
 			let videoChanged = classList.some((string, index) => {
 				if (event.target.classList.contains(string)) return true
 			})
-			// If the user selected a new video, run setup for new video
+			// if the user selected a new video, run setup for new video
 			if (videoChanged) Observer.observe(document, { childList: true, subtree: true })
+			else return
 		}
 
 		chrome.storage.sync.get({ udemy_playback_rate: 1 }, obj => {
 			// setTimeout needed to override Udemy's events
 			setTimeout(() => {
-				if (timeout === firstLoadTimeout) {
+				if (event.type === 'loadeddata') {
+					// on initial load make sure menu
+					// items are correctly set
 					// gotta love algebra
 					let itemIndexPosition = (obj.udemy_playback_rate - highestRate) / increment / -1
 					setMenuItemsHTML(menu.children[itemIndexPosition])
@@ -41,7 +39,8 @@ function initialize(video, menu) {
 		})
 	}
 
-	// Following the format on Udemy. May remove child span in future.
+	// following the format on Udemy
+	// may remove child span in future
 	function populateItems() {
 		menu.innerHTML = `
 		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">3.5x <span class="vjs-control-text"> </span></li>
@@ -82,8 +81,10 @@ function initialize(video, menu) {
 		element.style.background = 'red'
 	}
 
-	video.addEventListener('playing', getPlaybackRate.bind(null, firstLoadTimeout))
-	document.addEventListener('keyup', getPlaybackRate.bind(null, timeout), true)
+	video.addEventListener('loadeddata', getPlaybackRate.bind(null, timeout))
+	video.addEventListener('play', getPlaybackRate.bind(null, timeout))
+	video.addEventListener('pause', getPlaybackRate.bind(null, timeout))
+	// is used to check if new video being clicked on
 	document.addEventListener('click', getPlaybackRate.bind(null, timeout))
 	populateItems()
 }
