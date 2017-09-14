@@ -1,7 +1,7 @@
 {
-	"name": "Udemy Video Playback Rate",
+	"name": "Udemy Video Playback Speed",
 	"version": "1.0.0",
-	"description": "More playback speed options for Udemy",
+	"description": "Adds more playback speed options for videos on Udemy",
 	"manifest_version": 2,
 	"icons": {
 		"16": "icon.png",
