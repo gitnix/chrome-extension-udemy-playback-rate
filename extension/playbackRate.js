@@ -1,13 +1,8 @@
-function initialize(video, menu) {
-	// timeout is not used to wait on content
-	// content is assured to be available b/c of mutation observer
-	// and event listeners
-	// timeout is used to override Udemy's default actions
-	const TIMEOUT = 5
+function initialize(video, menu, rateBtn) {
 	const MAX_RATE = 3.5
 	const INCREMENT = 0.25
 
-	function getPlaybackRate(timeout, event) {
+	function getPlaybackRate(event) {
 		if (event.type === 'click') {
 			let classList = ['fx', 'lecture__item__link__name', 'mr5', 'lecture__item__link', 'udi-play']
 			let videoChanged = classList.some(string => {
@@ -19,24 +14,32 @@ function initialize(video, menu) {
 		}
 
 		chrome.storage.sync.get({ udemy_playback_rate: 1 }, obj => {
-			// setTimeout needed to override Udemy's events
-			setTimeout(() => {
-				if (event.type === 'loadeddata') {
-					// on initial load make sure menu
-					// items are correctly set
-					// gotta love algebra
-					let itemIndexPosition = (obj.udemy_playback_rate - MAX_RATE) / INCREMENT / -1
-					setMenuItemsHTML(menu.children[itemIndexPosition])
-				}
-				video.playbackRate = obj.udemy_playback_rate
-			}, timeout)
+			if (event.type === 'loadeddata') {
+				// gotta love algebra
+				let itemIndexPosition = (obj.udemy_playback_rate - MAX_RATE) / INCREMENT / -1
+				setMenuItemsHTML(menu.children[itemIndexPosition])
+			}
+			video.playbackRate = obj.udemy_playback_rate
 		})
 	}
 
 	function setPlaybackRate(rate, event) {
-		chrome.storage.sync.set({ udemy_playback_rate: rate }, () => {
-			video.playbackRate = rate
-		})
+		// increment speed if rate button clicked
+		if (rate === INCREMENT) {
+			let newRate = rate
+			chrome.storage.sync.get({ udemy_playback_rate: 1 }, obj => {
+				newRate = obj.udemy_playback_rate + INCREMENT
+				if (newRate > MAX_RATE) newRate = 0.5
+				let itemIndexPosition = (newRate - MAX_RATE) / INCREMENT / -1
+				setMenuItemsHTML(menu.children[itemIndexPosition])
+				chrome.storage.sync.set({ udemy_playback_rate: newRate }, () => {
+					video.playbackRate = newRate
+				})
+			})
+		} else
+			chrome.storage.sync.set({ udemy_playback_rate: rate }, () => {
+				video.playbackRate = rate
+			})
 	}
 
 	// following the format on Udemy
@@ -60,7 +63,7 @@ function initialize(video, menu) {
 		Object.keys(menu.children).forEach((val, index) => {
 			let element = menu.children[val]
 
-			element.addEventListener('click', function() {
+			element.addEventListener('click', () => {
 				setPlaybackRate(MAX_RATE - index * INCREMENT)
 				setMenuItemsHTML(element)
 			})
@@ -78,14 +81,19 @@ function initialize(video, menu) {
 		element.setAttribute('aria-checked', true)
 		element.setAttribute('title', ', selected')
 		element.children[0].innerHTML = ', selected'
-		element.style.background = 'red'
+		element.style.background = 'rgb(236, 82, 82)'
 	}
 
-	video.addEventListener('loadeddata', getPlaybackRate.bind(null, TIMEOUT))
-	video.addEventListener('play', getPlaybackRate.bind(null, TIMEOUT))
-	video.addEventListener('pause', getPlaybackRate.bind(null, TIMEOUT))
+	video.addEventListener('loadeddata', getPlaybackRate)
+	video.addEventListener('play', getPlaybackRate)
+	video.addEventListener('pause', getPlaybackRate)
+
+	rateBtn.addEventListener('click', () => {
+		setPlaybackRate(INCREMENT)
+	})
+
 	// is used to check if new video being clicked on
-	document.addEventListener('click', getPlaybackRate.bind(null, TIMEOUT))
+	document.addEventListener('click', getPlaybackRate)
 	populateItems()
 }
 
@@ -96,10 +104,11 @@ let Observer = new MutationObserver((mutations, observer) => {
 		let menuElement = document.querySelector(
 			'div.vjs-control-bar.hide-when-user-inactive.player-controls > div.playback-controls > div > div.vjs-menu > ul',
 		)
-		if (videoElement && menuElement && !hasRun) {
+		let rateButton = document.getElementsByClassName('vjs-playback-rate-value')[0]
+		if (videoElement && menuElement && rateButton && !hasRun) {
 			observer.disconnect()
 			hasRun = true
-			initialize(videoElement, menuElement)
+			initialize(videoElement, menuElement, rateButton)
 		}
 	})
 })
