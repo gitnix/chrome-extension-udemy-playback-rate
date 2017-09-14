@@ -4,6 +4,5 @@ This extension ([link to extension page](https://chrome.google.com/webstore/deta
 You can watch videos at up to 3.5x speed!
 <br/>
 <br/>
----
 
-![Example Image](/screenshots/udemy-video-playback-options-screenshot_1.png)
+![Example Image](/screenshots/example.png)
