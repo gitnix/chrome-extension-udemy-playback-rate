@@ -13,6 +13,11 @@ function initialize(video, menu, rateBtn) {
 			else return
 		}
 
+		// if the page has been changed ('scroll' being fired on document), run setup for video
+		if (event.type === 'scroll') {
+			Observer.observe(document, { childList: true, subtree: true })
+		}
+
 		chrome.storage.sync.get({ udemy_playback_rate: 1 }, obj => {
 			if (event.type === 'loadeddata') {
 				// gotta love algebra
@@ -86,11 +91,14 @@ function initialize(video, menu, rateBtn) {
 
 	video.addEventListener('loadeddata', getPlaybackRate)
 	video.addEventListener('play', getPlaybackRate)
-	video.addEventListener('pause', getPlaybackRate)
 
 	rateBtn.addEventListener('click', () => {
 		setPlaybackRate(INCREMENT)
 	})
+
+	// this is fired whenever the page changes (not fired in fullscreen) so make use of it
+	// to reattach listeners
+	document.addEventListener('scroll', getPlaybackRate)
 
 	// is used to check if new video being clicked on
 	document.addEventListener('click', getPlaybackRate)
@@ -100,7 +108,7 @@ function initialize(video, menu, rateBtn) {
 let Observer = new MutationObserver((mutations, observer) => {
 	let hasRun = false
 	mutations.forEach(() => {
-		let videoElement = document.getElementsByClassName('vjs-tech')[0]
+		let videoElement = document.getElementsByTagName('video')[0]
 		let menuElement = document.querySelector(
 			'div.vjs-control-bar.hide-when-user-inactive.player-controls > div.playback-controls > div > div.vjs-menu > ul',
 		)
