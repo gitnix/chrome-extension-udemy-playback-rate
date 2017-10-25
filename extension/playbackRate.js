@@ -4,19 +4,27 @@ function initialize(video, menu, rateBtn) {
 
 	function getPlaybackRate(event) {
 		if (event.type === 'click') {
-			let classList = ['fx', 'lecture__item__link__name', 'mr5', 'lecture__item__link', 'udi-play']
+			let classList = [
+				'fx',
+				'lecture__item__link__name',
+				'mr5',
+				'lecture__item__link',
+				'udi-play',
+				'udi-next',
+				'btn__label',
+				'continue-button--btn__label--3H0BR',
+			]
+
 			let videoChanged = classList.some(string => {
 				if (event.target.classList.contains(string)) return true
 			})
-			// if the user selected a new video, run setup for new video
-			if (videoChanged) Observer.observe(document, { childList: true, subtree: true })
+			// if the user selected a new video or clicked continue, run setup for next video
+			if (videoChanged) observeDocument()
 			else return
 		}
 
-		// if the page has been changed ('scroll' being fired on document), run setup for video
-		if (event.type === 'scroll') {
-			Observer.observe(document, { childList: true, subtree: true })
-		}
+		// if the video ended on its own, run setup for next video
+		if (event.type === 'ended') observeDocument()
 
 		chrome.storage.sync.get({ udemy_playback_rate: 1 }, obj => {
 			if (event.type === 'loadeddata') {
@@ -91,34 +99,47 @@ function initialize(video, menu, rateBtn) {
 
 	video.addEventListener('loadeddata', getPlaybackRate)
 	video.addEventListener('play', getPlaybackRate)
+	video.addEventListener('ended', getPlaybackRate)
 
 	rateBtn.addEventListener('click', () => {
 		setPlaybackRate(INCREMENT)
 	})
 
-	// this is fired whenever the page changes (not fired in fullscreen) so make use of it
-	// to reattach listeners
-	document.addEventListener('scroll', getPlaybackRate)
-
-	// is used to check if new video being clicked on
+	// is used to check if new video selected or continue button clicked
 	document.addEventListener('click', getPlaybackRate)
 	populateItems()
 }
 
+let observerCompleted = false
+
 let Observer = new MutationObserver((mutations, observer) => {
-	let hasRun = false
 	mutations.forEach(() => {
 		let videoElement = document.getElementsByTagName('video')[0]
 		let menuElement = document.querySelector(
 			'div.vjs-control-bar.hide-when-user-inactive.player-controls > div.playback-controls > div > div.vjs-menu > ul',
 		)
 		let rateButton = document.getElementsByClassName('vjs-playback-rate-value')[0]
-		if (videoElement && menuElement && rateButton && !hasRun) {
+		if (videoElement && menuElement && rateButton && !observerCompleted) {
+			observerCompleted = true
 			observer.disconnect()
-			hasRun = true
 			initialize(videoElement, menuElement, rateButton)
 		}
 	})
 })
 
-Observer.observe(document, { childList: true, subtree: true })
+function observeDocument() {
+	let videoElement = document.getElementsByTagName('video')[0]
+	let menuElement = document.querySelector(
+		'div.vjs-control-bar.hide-when-user-inactive.player-controls > div.playback-controls > div > div.vjs-menu > ul',
+	)
+	let rateButton = document.getElementsByClassName('vjs-playback-rate-value')[0]
+	// after initial page load manually remove elements so we can use mutation observer
+	if (videoElement) videoElement.remove()
+	if (menuElement) menuElement.remove()
+	if (rateButton) rateButton.remove()
+
+	observerCompleted = false
+	Observer.observe(document, { childList: true, subtree: true })
+}
+
+observeDocument()
