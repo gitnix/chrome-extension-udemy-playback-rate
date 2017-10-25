@@ -1,5 +1,5 @@
 function initialize(video, menu, rateBtn) {
-	const MAX_RATE = 3.5
+	const MAX_RATE = 4
 	const INCREMENT = 0.25
 
 	function getPlaybackRate(event) {
@@ -9,10 +9,12 @@ function initialize(video, menu, rateBtn) {
 				'lecture__item__link__name',
 				'mr5',
 				'lecture__item__link',
+				'btn-control',
 				'udi-play',
 				'udi-next',
 				'btn__label',
 				'continue-button--btn__label--3H0BR',
+				'continue-button--responsive--3c3TI',
 			]
 
 			let videoChanged = classList.some(string => {
@@ -59,6 +61,8 @@ function initialize(video, menu, rateBtn) {
 	// may remove child span in future
 	function populateItems() {
 		menu.innerHTML = `
+		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">4x <span class="vjs-control-text"> </span></li>
+		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">3.75x <span class="vjs-control-text"> </span></li>
 		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">3.5x <span class="vjs-control-text"> </span></li>
 		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">3.25x <span class="vjs-control-text"> </span></li>
 		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">3x <span class="vjs-control-text"> </span></li>
@@ -133,7 +137,7 @@ function observeDocument() {
 		'div.vjs-control-bar.hide-when-user-inactive.player-controls > div.playback-controls > div > div.vjs-menu > ul',
 	)
 	let rateButton = document.getElementsByClassName('vjs-playback-rate-value')[0]
-	// after initial page load manually remove elements so we can use mutation observer
+	// if not initial page load manually remove elements so we can use mutation observer on video change
 	if (videoElement) videoElement.remove()
 	if (menuElement) menuElement.remove()
 	if (rateButton) rateButton.remove()
