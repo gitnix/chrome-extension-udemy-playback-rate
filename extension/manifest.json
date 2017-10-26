@@ -1,6 +1,6 @@
 {
 	"name": "Udemy Video Playback Speed",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"description": "Adds additional playback speed options for videos on Udemy.",
 	"manifest_version": 2,
 	"icons": {
@@ -21,7 +21,8 @@
 				"https://www.udemy.com/home/*",
 				"https://www.udemy.com/message/*"
 			],
-			"js": ["playbackRate.js"]
+			"js": ["playbackRate.js"],
+			"css": ["menuList.css"]
 		}
 	]
 }

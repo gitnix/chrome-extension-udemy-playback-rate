@@ -9,7 +9,6 @@ function initialize(video, menu, rateBtn) {
 				'lecture__item__link__name',
 				'mr5',
 				'lecture__item__link',
-				'btn-control',
 				'udi-play',
 				'udi-next',
 				'btn__label',
