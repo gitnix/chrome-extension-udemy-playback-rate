@@ -1,6 +1,6 @@
 {
 	"name": "Udemy Video Playback Speed",
-	"version": "1.0.7",
+	"version": "1.0.8",
 	"description": "Adds additional playback speed options for videos on Udemy.",
 	"manifest_version": 2,
 	"icons": {
@@ -12,15 +12,6 @@
 	"content_scripts": [
 		{
 			"matches": ["https://www.udemy.com/*"],
-			"exclude_matches": [
-				"https://www.udemy.com/",
-				"https://www.udemy.com/user/*",
-				"https://www.udemy.com/dasboard/*",
-				"https://www.udemy.com/cart/*",
-				"https://www.udemy.com/courses/*",
-				"https://www.udemy.com/home/*",
-				"https://www.udemy.com/message/*"
-			],
 			"js": ["playbackRate.js"],
 			"css": ["menuList.css"]
 		}

@@ -1,29 +1,61 @@
+const MAX_RATE = 4
+const MIN_RATE = 0.5
+const INCREMENT = 0.25
+
+const LECTURE_ITEM_LINK_SELECTION_COLOR = 'rgb(0, 94, 114)'
+
+const observeClick = event => {
+	const classList = [
+		'fx',
+		'lecture__item__link__name',
+		'lecture__item__link__time',
+		'mr5',
+		'lecture__item__link',
+		'udi-play',
+		'udi-next',
+		'continue-button--btn__label--3H0BR',
+		'continue-button--responsive--3c3TI',
+		'play-icon',
+		'detail__continue-button',
+	]
+
+	const willObserve = () => {
+		// used to catch a pesky span on "continue to lecture" button
+		if (event.target.tagName === 'SPAN') if (checkForDetailContinueButton(event.target)) return true
+		// ensures mutation observer not run (and thus elements not removed) if click on current video list item
+		// in which current is determined from background color of selection
+		if (checkChainForBackgroundColor(event.target, LECTURE_ITEM_LINK_SELECTION_COLOR)) return false
+
+		return classList.some(string => {
+			if (event.target.classList.contains(string)) return true
+		})
+	}
+	if (willObserve()) {
+		// if the user selected a new video or clicked continue, run setup for next video
+		observeDocument()
+	}
+}
+
+function nodeInChainMeetsCondition(node, computeFn, expected, nullNodeReturnVal = false) {
+	if (node == null || node.parentNode == null) return nullNodeReturnVal
+	if (computeFn(node) === expected) return true
+	if (node.parentNode.isEqualNode(document)) return false
+	return nodeInChainMeetsCondition(node.parentNode, computeFn, expected, nullNodeReturnVal)
+}
+
+const getNodeStyle = node => getComputedStyle(node)
+const getBackgroundColor = node => getNodeStyle(node).backgroundColor
+const isInClassList = className => node => node.classList.contains(className)
+const checkChainForBackgroundColor = (node, color) => nodeInChainMeetsCondition(node, getBackgroundColor, color)
+// used to catch a pesky span on "continue to lecture" button
+const checkForDetailContinueButton = node =>
+	nodeInChainMeetsCondition(node, isInClassList('detail__continue-button'), true, true)
+
+// is used to check if new video selected or continue button clicked
+document.addEventListener('click', observeClick)
+
 function initialize(video, menu, rateBtn) {
-	const MAX_RATE = 4
-	const INCREMENT = 0.25
-
 	function getPlaybackRate(event) {
-		if (event.type === 'click') {
-			let classList = [
-				'fx',
-				'lecture__item__link__name',
-				'mr5',
-				'lecture__item__link',
-				'udi-play',
-				'udi-next',
-				'btn__label',
-				'continue-button--btn__label--3H0BR',
-				'continue-button--responsive--3c3TI',
-			]
-
-			let videoChanged = classList.some(string => {
-				if (event.target.classList.contains(string)) return true
-			})
-			// if the user selected a new video or clicked continue, run setup for next video
-			if (videoChanged) observeDocument()
-			else return
-		}
-
 		// if the video ended on its own, run setup for next video
 		if (event.type === 'ended') observeDocument()
 
@@ -37,13 +69,12 @@ function initialize(video, menu, rateBtn) {
 		})
 	}
 
-	function setPlaybackRate(rate, event) {
-		// increment speed if rate button clicked
-		if (rate === INCREMENT) {
-			let newRate = rate
+	function setPlaybackRate(rate = 0, event) {
+		// no rate passed means default value case, which is to increment rate by INCREMENT
+		if (rate === 0) {
 			chrome.storage.sync.get({ udemy_playback_rate: 1 }, obj => {
-				newRate = obj.udemy_playback_rate + INCREMENT
-				if (newRate > MAX_RATE) newRate = 0.5
+				let newRate = obj.udemy_playback_rate + INCREMENT
+				if (newRate > MAX_RATE) newRate = MIN_RATE
 				let itemIndexPosition = (newRate - MAX_RATE) / INCREMENT / -1
 				setMenuItemsHTML(menu.children[itemIndexPosition])
 				chrome.storage.sync.set({ udemy_playback_rate: newRate }, () => {
@@ -56,26 +87,12 @@ function initialize(video, menu, rateBtn) {
 			})
 	}
 
-	// following the format on Udemy
-	// may remove child span in future
 	function populateItems() {
-		menu.innerHTML = `
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">4x <span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">3.75x <span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">3.5x <span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">3.25x <span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">3x <span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">2.75x <span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">2.5x<span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">2.25x<span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">2x<span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">1.75x<span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">1.5x<span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">1.25x<span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">1x<span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">0.75x<span class="vjs-control-text"> </span></li>
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">0.5x<span class="vjs-control-text"> </span></li>
-	`
+		let iterations = 1 + (MAX_RATE - MIN_RATE) / INCREMENT
+		let menuItems = Array(iterations).fill()
+		let menuHtml = menuItems.reduce((acc, curr, index) => (acc += renderListItem(index)), '')
+
+		menu.innerHTML = menuHtml
 		Object.keys(menu.children).forEach((val, index) => {
 			let element = menu.children[val]
 
@@ -105,43 +122,51 @@ function initialize(video, menu, rateBtn) {
 	video.addEventListener('ended', getPlaybackRate)
 
 	rateBtn.addEventListener('click', () => {
-		setPlaybackRate(INCREMENT)
+		setPlaybackRate()
 	})
 
-	// is used to check if new video selected or continue button clicked
-	document.addEventListener('click', getPlaybackRate)
 	populateItems()
 }
 
-let observerCompleted = false
+function renderListItem(index) {
+	let playbackNumber = MAX_RATE - INCREMENT * index
+	let listItem = `
+		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">
+			${playbackNumber}x
+			<span class="vjs-control-text"></span>
+		</li>`
+	return listItem
+}
+
+const getVideoElement = () => document.getElementsByTagName('video')[0]
+
+const getMenuElement = () =>
+	document.querySelector(
+		'div.vjs-playback-rate.vjs-menu-button.vjs-menu-button-popup.vjs-control.vjs-button > div.vjs-menu > ul.vjs-menu-content',
+	)
+
+const getRateButton = () => document.getElementsByClassName('vjs-playback-rate-value')[0]
+
+const getRequiredNodes = () => [getVideoElement(), getMenuElement(), getRateButton()]
 
 let Observer = new MutationObserver((mutations, observer) => {
 	mutations.forEach(() => {
-		let videoElement = document.getElementsByTagName('video')[0]
-		let menuElement = document.querySelector(
-			'div.vjs-control-bar.hide-when-user-inactive.player-controls > div.playback-controls > div > div.vjs-menu > ul',
-		)
-		let rateButton = document.getElementsByClassName('vjs-playback-rate-value')[0]
-		if (videoElement && menuElement && rateButton && !observerCompleted) {
-			observerCompleted = true
+		let requiredNodes = getRequiredNodes()
+		let documentReady = requiredNodes.every(el => !!el == true)
+		if (documentReady) {
 			observer.disconnect()
-			initialize(videoElement, menuElement, rateButton)
+			initialize(...requiredNodes)
 		}
+		return
 	})
 })
 
 function observeDocument() {
-	let videoElement = document.getElementsByTagName('video')[0]
-	let menuElement = document.querySelector(
-		'div.vjs-control-bar.hide-when-user-inactive.player-controls > div.playback-controls > div > div.vjs-menu > ul',
-	)
-	let rateButton = document.getElementsByClassName('vjs-playback-rate-value')[0]
+	let nodes = getRequiredNodes()
 	// if not initial page load manually remove elements so we can use mutation observer on video change
-	if (videoElement) videoElement.remove()
-	if (menuElement) menuElement.remove()
-	if (rateButton) rateButton.remove()
-
-	observerCompleted = false
+	nodes.forEach(node => {
+		if (node) node.remove()
+	})
 	Observer.observe(document, { childList: true, subtree: true })
 }
 
