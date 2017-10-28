@@ -4,7 +4,7 @@ const INCREMENT = 0.25
 
 const LECTURE_ITEM_LINK_SELECTION_COLOR = 'rgb(0, 94, 114)'
 const DETAIL_BUTTON = 'detail__continue-button'
-const MENU_ITEM_HIGHLIGHT = '#rgb(236, 82, 82)'
+const MENU_ITEM_HIGHLIGHT = 'rgb(236, 82, 82)'
 
 // if the event.target.classList contains one of these classes
 // start mutation observer
