@@ -24,7 +24,6 @@ const CLASS_LIST = [
 
 const observeClick = event => {
 	const willObserve = () => {
-		if (ccBackgroundColor(event.target)(LECTURE_ITEM_LINK_SELECTION_COLOR)) return false
 		// used to catch a pesky span on "continue to lecture" button
 		if (event.target.tagName === 'SPAN') {
 			if (ccClass(event.target)(DETAIL_BUTTON)) return true
