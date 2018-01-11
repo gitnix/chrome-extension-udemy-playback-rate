@@ -4,32 +4,20 @@ const INCREMENT = 0.25
 
 const MENU_ITEM_HIGHLIGHT = 'rgb(236, 82, 82)'
 
+let currentVideo, currentMenu
+let keyListenerAdded = false
+
 function initialize(video, menu, rateBtn) {
-	function getPlaybackRate(event) {
+	function getPlaybackRate() {
+		currentVideo = video
+		currentMenu = menu
 		chrome.storage.sync.get({ udemy_playback_rate: 1 }, obj => {
 			// gotta love algebra
-			let itemIndexPosition = (obj.udemy_playback_rate - MAX_RATE) / INCREMENT / -1
+			let itemIndexPosition =
+				(obj.udemy_playback_rate - MAX_RATE) / INCREMENT / -1
 			setMenuItemsHTML(menu.children[itemIndexPosition], menu)
 			video.playbackRate = obj.udemy_playback_rate
 		})
-	}
-
-	function setPlaybackRate(rate = 0, event) {
-		// no rate passed means default value case, which is to increment rate by INCREMENT
-		if (rate === 0) {
-			chrome.storage.sync.get({ udemy_playback_rate: 1 }, obj => {
-				let newRate = obj.udemy_playback_rate + INCREMENT
-				if (newRate > MAX_RATE) newRate = MIN_RATE
-				let itemIndexPosition = (newRate - MAX_RATE) / INCREMENT / -1
-				setMenuItemsHTML(menu.children[itemIndexPosition], menu)
-				chrome.storage.sync.set({ udemy_playback_rate: newRate }, () => {
-					video.playbackRate = newRate
-				})
-			})
-		} else
-			chrome.storage.sync.set({ udemy_playback_rate: rate }, () => {
-				video.playbackRate = rate
-			})
 	}
 
 	function populateItems() {
@@ -37,14 +25,17 @@ function initialize(video, menu, rateBtn) {
 		// give us an array of length iterations to run reduce on
 		let menuItems = Array(iterations).fill()
 		// construct a chunk of HTML to give to innerHTML of menu
-		let menuHtml = menuItems.reduce((acc, curr, index) => (acc += renderListItem(index)), '')
+		let menuHtml = menuItems.reduce(
+			(acc, curr, index) => (acc += renderListItem(index)),
+			'',
+		)
 
 		menu.innerHTML = menuHtml
 		Object.keys(menu.children).forEach((val, index) => {
 			let element = menu.children[val]
 			// menu item will change playback rate to its value when clicked
 			element.addEventListener('click', () => {
-				setPlaybackRate(MAX_RATE - index * INCREMENT)
+				setPlaybackRate(MAX_RATE - index * INCREMENT, video, menu)
 				// make item clicked the selected item
 				setMenuItemsHTML(element, menu)
 			})
@@ -56,9 +47,34 @@ function initialize(video, menu, rateBtn) {
 	video.addEventListener('ended', getPlaybackRate)
 
 	// clicking the playback rate display increments the rate by INCREMENT
-	rateBtn.addEventListener('click', () => setPlaybackRate())
+	rateBtn.addEventListener('click', () =>
+		setPlaybackRate('increase', video, menu),
+	)
+
+	if (!keyListenerAdded) addKeyListener()
 
 	populateItems()
+}
+
+function setPlaybackRate(rate, video, menu) {
+	// no rate passed means default value case, which is to increment rate by INCREMENT
+	if (rate === 'increase' || rate === 'decrease') {
+		chrome.storage.sync.get({ udemy_playback_rate: 1 }, obj => {
+			let newRate
+			if (rate === 'increase') newRate = obj.udemy_playback_rate + INCREMENT
+			if (rate === 'decrease') newRate = obj.udemy_playback_rate - INCREMENT
+			if (newRate > MAX_RATE) newRate = MIN_RATE
+			if (newRate < MIN_RATE) newRate = MAX_RATE
+			let itemIndexPosition = (newRate - MAX_RATE) / INCREMENT / -1
+			setMenuItemsHTML(menu.children[itemIndexPosition], menu)
+			chrome.storage.sync.set({ udemy_playback_rate: newRate }, () => {
+				video.playbackRate = newRate
+			})
+		})
+	} else
+		chrome.storage.sync.set({ udemy_playback_rate: rate }, () => {
+			video.playbackRate = rate
+		})
 }
 
 function renderListItem(index) {
@@ -143,5 +159,21 @@ let Observer = new MutationObserver((mutations, observer) => {
 		}
 	})
 })
+
+function addKeyListener() {
+	document.addEventListener('keyup', () => {
+		if (event.code === 'ArrowRight' && event.shiftKey) {
+			if (currentVideo && currentMenu) {
+				setPlaybackRate('increase', currentVideo, currentMenu)
+			}
+		}
+		if (event.code === 'ArrowLeft' && event.shiftKey) {
+			if (currentVideo && currentMenu) {
+				setPlaybackRate('decrease', currentVideo, currentMenu)
+			}
+		}
+	})
+	keyListenerAdded = true
+}
 
 Observer.observe(document, { childList: true, subtree: true })
