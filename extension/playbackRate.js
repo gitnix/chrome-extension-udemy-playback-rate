@@ -127,8 +127,13 @@ let checkForClass = (node, classCheck, type) => {
 		children.forEach(child => {
 			if (child.classList.contains(classCheck)) {
 				if (type === 'menu') {
-					if (!child.firstChild) return
-					if (child.firstChild.textContent === 'Speed') {
+					if (!child.firstChild) {
+						return
+					}
+					if (
+						child.firstChild.textContent === '2x, selected' ||
+						child.firstChild.textContent === '2x'
+					) {
 						menuToAdd = child
 						return
 					}
