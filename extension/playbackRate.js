@@ -46,11 +46,6 @@ function initialize(video, menu, rateBtn) {
 	video.addEventListener('play', getPlaybackRate)
 	video.addEventListener('ended', getPlaybackRate)
 
-	// clicking the playback rate display increments the rate by INCREMENT
-	rateBtn.addEventListener('click', () =>
-		setPlaybackRate('increase', video, menu),
-	)
-
 	if (!keyListenerAdded) addKeyListener()
 
 	populateItems()
@@ -131,8 +126,8 @@ let checkForClass = (node, classCheck, type) => {
 						return
 					}
 					if (
-						child.firstChild.textContent === '2x, selected' ||
-						child.firstChild.textContent === '2x'
+						child.firstChild.textContent === '0.5' ||
+						child.firstChild.textContent === '0.5, selected'
 					) {
 						menuToAdd = child
 						return
