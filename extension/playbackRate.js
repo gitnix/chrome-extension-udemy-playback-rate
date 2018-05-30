@@ -8,6 +8,8 @@ let currentVideo, currentMenu
 let keyListenerAdded = false
 
 function initialize(video, menu, rateBtn) {
+	foundVideoSrc = true
+
 	function getPlaybackRate() {
 		currentVideo = video
 		currentMenu = menu
@@ -101,6 +103,22 @@ function setMenuItemsHTML(element, menu) {
 let videoToAdd = false
 let menuToAdd = false
 let rateBtnToAdd = false
+let foundVideoSrc = false
+
+function checkIfVideoSrc(videoId, menu, rateBtn) {
+	if (
+		!document.getElementById(videoId) ||
+		!document.getElementById(videoId).src
+	) {
+		if (foundVideoSrc) return
+		setTimeout(
+			() => checkIfVideoSrc(document.getElementById(videoId), menu, rateBtn),
+			2000,
+		)
+	} else {
+		initialize(document.getElementById(videoId), menu, rateBtn)
+	}
+}
 
 let checkForClass = (node, classCheck, type) => {
 	if (type === 'video') {
@@ -154,8 +172,12 @@ let Observer = new MutationObserver((mutations, observer) => {
 			})
 		}
 		if (videoToAdd && menuToAdd && rateBtnToAdd) {
-			initialize(videoToAdd, menuToAdd, rateBtnToAdd)
+			let videoToUse = videoToAdd
+			let menuToUse = menuToAdd
+			let rateBtnToUse = rateBtnToAdd
 			videoToAdd = menuToAdd = rateBtnToAdd = false
+			foundVideoSrc = false
+			checkIfVideoSrc(videoToUse.id, menuToUse, rateBtnToUse)
 		}
 	})
 })
