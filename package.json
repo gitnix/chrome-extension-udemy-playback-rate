@@ -1,0 +1,16 @@
+{
+	"name": "chrome-extension-udemy-playback-rate",
+	"version": "1.2.4",
+	"description": "This extension adds additional playback speed options for videos on Udemy. You can watch videos at up to 4x speed!",
+	"scripts": {
+		"webpack": "webpack"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/gitnix/chrome-extension-udemy-playback-rate.git"
+	},
+	"devDependencies": {
+		"webpack": "^4.26.0",
+		"webpack-cli": "^3.1.2"
+	}
+}
