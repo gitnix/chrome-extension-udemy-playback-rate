@@ -11,7 +11,7 @@
 	"permissions": ["storage"],
 	"content_scripts": [
 		{
-			"matches": ["https://www.udemy.com/*"],
+			"matches": ["https://*.udemy.com/*"],
 			"js": ["playbackRate.js"],
 			"css": ["menuList.css"]
 		}
