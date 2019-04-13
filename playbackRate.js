@@ -74,20 +74,30 @@ function setPlaybackRate(rate, video, menu) {
 			setMenuItemsHTML(menu.children[itemIndexPosition], menu)
 			chrome.storage.sync.set({ udemy_playback_rate: newRate }, () => {
 				video.playbackRate = newRate
+				document.querySelector(
+					"[data-purpose='playback-rate-button']",
+				).innerText = newRate
 			})
 		})
-	} else
+	} else {
 		chrome.storage.sync.set({ udemy_playback_rate: rate }, () => {
 			video.playbackRate = rate
+			document.querySelector(
+				"[data-purpose='playback-rate-button']",
+			).innerText = rate
 		})
+	}
 }
 
 function renderListItem(index) {
 	const playbackNumber = MAX_RATE - INCREMENT * index
 	const listItem = `
-		<li tabindex="-1" role="menuitem" aria-live="polite" aria-disabled="false" aria-checked="false">
-			${playbackNumber}x
-			<span class="vjs-control-text"></span>
+		<li class="menu--menu--2Pw42 menu--item--2IgLt" role="menuitem" role="presentation">
+			<a tabindex="-1" role="menuitem">
+				<span class="playback-rate--playback-rate--1XOKO">
+					${playbackNumber}
+				</span>
+			</a>
 		</li>`
 	return listItem
 }
@@ -96,16 +106,10 @@ function setMenuItemsHTML(element, menu) {
 	// set all menu items to be unselected
 	Object.keys(menu.children).forEach(val => {
 		const el = menu.children[val]
-		el.setAttribute('aria-checked', false)
-		el.setAttribute('title', '')
-		el.children[0].innerHTML = ''
-		el.style.background = ''
+		el.classList.remove('active')
 	})
 	// adjust click event menu item to be selected
-	element.setAttribute('aria-checked', true)
-	element.setAttribute('title', ', selected')
-	element.children[0].innerHTML = ', selected'
-	element.style.background = MENU_ITEM_HIGHLIGHT
+	element.classList.add('active')
 }
 
 function checkForClass(node, classCheck, type) {
@@ -140,8 +144,10 @@ function checkForClass(node, classCheck, type) {
 					}
 					return
 				}
-				rateBtnToAdd = child
-				return
+				// if rate button was affected update inner text
+				chrome.storage.sync.get({ udemy_playback_rate: 1 }, obj => {
+					child.innerText = obj.udemy_playback_rate
+				})
 			}
 			return checkForClass(child, classCheck, type)
 		})
@@ -155,11 +161,15 @@ const Observer = new MutationObserver(mutations => {
 		if (mutation.addedNodes.length > 0) {
 			const addedNodes = Array.from(mutation.addedNodes)
 			addedNodes.forEach(node => {
-				checkForClass(node, 'vjs-menu-content', 'menu')
-				checkForClass(node, 'vjs-playback-rate-value', 'rateBtn')
+				checkForClass(node, 'menu--menu--2Pw42', 'menu')
+				checkForClass(
+					node,
+					'playback-rate--playback-rate-value--3SJ7v',
+					'rateBtn',
+				)
 			})
 		}
-		if (videoToAdd && menuToAdd && rateBtnToAdd) {
+		if (videoToAdd && menuToAdd) {
 			if (videoToAdd !== lastVideo) {
 				initialize()
 			}
