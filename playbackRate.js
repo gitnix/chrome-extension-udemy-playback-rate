@@ -150,7 +150,7 @@ function checkForClass(node, classCheck, type) {
 
 const Observer = new MutationObserver(mutations => {
 	mutations.forEach(mutation => {
-		checkForClass(mutation, 'video-js', 'video')
+		checkForClass(mutation, 'video-player--video-player--1sfof', 'video')
 
 		if (mutation.addedNodes.length > 0) {
 			const addedNodes = Array.from(mutation.addedNodes)
